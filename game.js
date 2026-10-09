@@ -22,9 +22,12 @@ const portalCard = document.getElementById('portalCard');
 const restartButton = document.getElementById('restartButton');
 const playAgainButton = document.getElementById('playAgainButton');
 
-const planetSpacing = 330;
-const planetWidth = 200;
-const planetScrollRate = 74;
+const terrainSpacing = 450;
+const terrainWidth = terrainSpacing;
+const startingTerrainWidth = 760;
+const nextTerrainStart = startingTerrainWidth + 20;
+const terrainScrollRate = 74;
+const jumpBufferDuration = 220;
 const stars = Array.from({ length: 110 }, (_, index) => ({
   x: (index * 137.508) % canvas.width,
   y: (index * 83.17 + 19) % canvas.height,
@@ -84,7 +87,7 @@ const checkpointQuestions = [
 const config = {
   gravity: 0.82,
   jumpVelocity: 15.2,
-  speed: 6.8,
+  speed: 5.8,
   maxAttempts: 2
 };
 
@@ -102,6 +105,7 @@ const game = {
   rewardUnlockAt: 0,
   popupLocked: false,
   checkpointFlags: new Set(),
+  checkpointDistance: 0,
   attempts: 0,
   player: {
     x: 84,
@@ -110,6 +114,7 @@ const game = {
     height: 60,
     vy: 0,
     isGrounded: true,
+    jumpRequestedUntil: 0,
     image: null
   }
 };
@@ -128,6 +133,7 @@ function resetPlayer() {
   game.player.y = groundY - game.player.height;
   game.player.vy = 0;
   game.player.isGrounded = true;
+  game.player.jumpRequestedUntil = 0;
 }
 
 function resetGame() {
@@ -143,6 +149,7 @@ function resetGame() {
   game.rewardUnlockAt = 0;
   game.popupLocked = false;
   game.checkpointFlags.clear();
+  game.checkpointDistance = 0;
   game.attempts = 0;
   resetPlayer();
   updateDistance();
@@ -163,6 +170,25 @@ function startGame() {
   game.rewardUnlockAt = 0;
   game.popupLocked = false;
   game.checkpointFlags.clear();
+  game.checkpointDistance = 0;
+  game.attempts = 0;
+  resetPlayer();
+  hideAllOverlays();
+  updateDistance();
+}
+
+function resumeFromCheckpoint() {
+  game.state = 'running';
+  game.distance = game.checkpointDistance;
+  game.speed = config.speed + Math.min(game.distance / 220, 2.8);
+  game.elapsed = 0;
+  game.obstacles = [];
+  game.nextSpawnAt = 700;
+  game.currentQuestion = null;
+  game.currentCheckpoint = null;
+  game.currentReward = '';
+  game.rewardUnlockAt = 0;
+  game.popupLocked = false;
   game.attempts = 0;
   resetPlayer();
   hideAllOverlays();
@@ -184,9 +210,16 @@ function updateDistance() {
 }
 
 function jumpPlayer() {
-  if (game.state !== 'running' || !game.player.isGrounded) return;
+  if (game.state !== 'running') return;
+  game.player.jumpRequestedUntil = performance.now() + jumpBufferDuration;
+  startPlayerJump();
+}
+
+function startPlayerJump() {
+  if (!game.player.isGrounded) return;
   game.player.vy = -config.jumpVelocity;
   game.player.isGrounded = false;
+  game.player.jumpRequestedUntil = 0;
 }
 
 function getRandomRange(min, max) {
@@ -194,10 +227,32 @@ function getRandomRange(min, max) {
 }
 
 function spawnObstacle() {
-  const height = getRandomRange(28, 62);
-  const width = getRandomRange(20, 34);
+  const height = 32;
+  const width = 46;
+  const safeZones = getVisibleTerrain().flatMap((segment) => {
+    const edgeClearance = 95;
+    const safeStart = segment.x + edgeClearance;
+    const safeEnd = segment.x + segment.width - edgeClearance;
+    if (segment.fakePatch) {
+      const patchStart = segment.fakePatch.x - edgeClearance;
+      const patchEnd = segment.fakePatch.x + segment.fakePatch.width + edgeClearance;
+      return [
+        { start: safeStart, end: Math.min(safeEnd, patchStart) },
+        { start: Math.max(safeStart, patchEnd), end: safeEnd }
+      ];
+    }
+    return [{ start: safeStart, end: safeEnd }];
+  }).filter((zone) =>
+    zone.end - width >= Math.max(zone.start, canvas.width + 30) &&
+    zone.start <= canvas.width + terrainSpacing
+  );
+
+  if (safeZones.length === 0) return;
+  const zone = safeZones[Math.floor(Math.random() * safeZones.length)];
+  const minX = Math.max(zone.start, canvas.width + 30);
+  const maxX = Math.min(zone.end - width, canvas.width + terrainSpacing);
   const obstacle = {
-    x: canvas.width + 30,
+    x: getRandomRange(minX, Math.max(minX, maxX)),
     y: groundY - height,
     width,
     height,
@@ -206,10 +261,24 @@ function spawnObstacle() {
   game.obstacles.push(obstacle);
 }
 
+function canStandOnTerrain(segment) {
+  const footLeft = game.player.x + 8;
+  const footRight = game.player.x + game.player.width - 8;
+  const overlapsGround =
+    footRight > segment.x + 8 &&
+    footLeft < segment.x + segment.width - 8;
+  const overlapsFakePatch = segment.fakePatch &&
+    footRight > segment.fakePatch.x &&
+    footLeft < segment.fakePatch.x + segment.fakePatch.width;
+
+  return overlapsGround && !overlapsFakePatch;
+}
+
 function openQuestionForCheckpoint(checkpoint) {
   if (game.checkpointFlags.has(checkpoint.id)) return;
 
   game.checkpointFlags.add(checkpoint.id);
+  game.checkpointDistance = checkpoint.distance;
   game.currentCheckpoint = checkpoint;
   game.currentQuestion = checkpoint;
   game.state = 'question';
@@ -320,6 +389,9 @@ function triggerGameOver() {
   if (game.state === 'gameover') return;
   game.state = 'gameover';
   gameOverDistance.textContent = `Distancia: ${Math.round(game.distance)} m`;
+  restartButton.textContent = game.checkpointDistance > 0
+    ? `Continuar desde ${game.checkpointDistance} m`
+    : 'Jugar otra vez';
   gameOverOverlay.classList.remove('hidden');
 }
 
@@ -344,7 +416,7 @@ function handleKeyDown(event) {
     }
 
     if (game.state === 'gameover') {
-      startGame();
+      resumeFromCheckpoint();
     }
   }
 }
@@ -368,19 +440,18 @@ function update(deltaMs) {
   if (game.state === 'running') {
     game.elapsed += deltaMs;
     game.distance += deltaMs * 0.0027 * game.speed;
-    game.speed = config.speed + Math.min(game.distance / 160, 3.6);
+    game.speed = config.speed + Math.min(game.distance / 220, 2.8);
 
     if (game.elapsed >= game.nextSpawnAt) {
       spawnObstacle();
       game.nextSpawnAt = game.elapsed + getRandomRange(700, 1200);
     }
 
-    const hasPlanetSupport = getVisiblePlanets().some((planet) =>
-      game.player.x + game.player.width > planet.x + 8 &&
-      game.player.x < planet.x + planetWidth - 8 &&
-      Math.abs(game.player.y + game.player.height - planet.top) < 2
+    const hasTerrainSupport = getVisibleTerrain().some((segment) =>
+      canStandOnTerrain(segment) &&
+      Math.abs(game.player.y + game.player.height - segment.top) < 2
     );
-    if (game.player.isGrounded && !hasPlanetSupport) {
+    if (game.player.isGrounded && !hasTerrainSupport) {
       game.player.isGrounded = false;
     }
 
@@ -389,17 +460,19 @@ function update(deltaMs) {
     game.player.y += game.player.vy * (deltaMs / 16.67);
 
     if (game.player.vy >= 0) {
-      const landingPlanet = getVisiblePlanets().find((planet) =>
-        game.player.x + game.player.width > planet.x + 8 &&
-        game.player.x < planet.x + planetWidth - 8 &&
-        previousBottom <= planet.top &&
-        game.player.y + game.player.height >= planet.top
+      const landingTerrain = getVisibleTerrain().find((segment) =>
+        canStandOnTerrain(segment) &&
+        previousBottom <= segment.top &&
+        game.player.y + game.player.height >= segment.top
       );
 
-      if (landingPlanet) {
-        game.player.y = landingPlanet.top - game.player.height;
+      if (landingTerrain) {
+        game.player.y = landingTerrain.top - game.player.height;
         game.player.vy = 0;
         game.player.isGrounded = true;
+        if (performance.now() <= game.player.jumpRequestedUntil) {
+          startPlayerJump();
+        }
       }
     }
 
@@ -476,6 +549,68 @@ function drawBackground() {
   drawDistantPlanet(350 - ((game.distance * 0.8) % 1460), 238, 27, '#315ca7', '#6f9de8');
 }
 
+function drawCastle() {
+  const x = canvas.width - 278;
+  const baseY = groundY;
+
+  ctx.save();
+  ctx.shadowColor = 'rgba(255, 208, 112, 0.55)';
+  ctx.shadowBlur = 24;
+  ctx.fillStyle = '#6b4d83';
+  ctx.strokeStyle = '#f2c879';
+  ctx.lineWidth = 3;
+  ctx.fillRect(x + 42, baseY - 115, 194, 115);
+  ctx.fillRect(x + 12, baseY - 160, 58, 160);
+  ctx.fillRect(x + 208, baseY - 160, 58, 160);
+  ctx.fillRect(x + 91, baseY - 190, 96, 190);
+  ctx.strokeRect(x + 42, baseY - 115, 194, 115);
+  ctx.strokeRect(x + 12, baseY - 160, 58, 160);
+  ctx.strokeRect(x + 208, baseY - 160, 58, 160);
+  ctx.strokeRect(x + 91, baseY - 190, 96, 190);
+  ctx.restore();
+
+  ctx.fillStyle = '#8a6ca1';
+  [x + 12, x + 208].forEach((towerX) => {
+    ctx.fillRect(towerX, baseY - 174, 15, 16);
+    ctx.fillRect(towerX + 22, baseY - 174, 15, 16);
+    ctx.fillRect(towerX + 43, baseY - 174, 15, 16);
+  });
+  [x + 91, x + 132, x + 173].forEach((towerX) => {
+    ctx.fillRect(towerX, baseY - 204, 15, 16);
+  });
+
+  ctx.fillStyle = '#f5d0fe';
+  ctx.fillRect(x + 31, baseY - 129, 16, 28);
+  ctx.fillRect(x + 227, baseY - 129, 16, 28);
+  ctx.fillRect(x + 122, baseY - 87, 34, 87);
+  ctx.beginPath();
+  ctx.arc(x + 139, baseY - 87, 17, Math.PI, 0);
+  ctx.fill();
+  ctx.fillStyle = '#34213d';
+  ctx.fillRect(x + 126, baseY - 70, 26, 70);
+  ctx.fillStyle = '#ffd166';
+  ctx.fillRect(x + 38, baseY - 84, 4, 4);
+  ctx.fillRect(x + 234, baseY - 84, 4, 4);
+  ctx.fillRect(x + 137, baseY - 144, 5, 5);
+  ctx.fillStyle = '#e8b875';
+  ctx.fillRect(x + 61, baseY - 105, 8, 8);
+  ctx.fillRect(x + 205, baseY - 105, 8, 8);
+
+  ctx.strokeStyle = '#d8b4fe';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(x + 138, baseY - 190);
+  ctx.lineTo(x + 138, baseY - 226);
+  ctx.stroke();
+  ctx.fillStyle = '#f472b6';
+  ctx.beginPath();
+  ctx.moveTo(x + 140, baseY - 225);
+  ctx.lineTo(x + 168, baseY - 216);
+  ctx.lineTo(x + 140, baseY - 207);
+  ctx.closePath();
+  ctx.fill();
+}
+
 function drawDistantPlanet(x, y, radius, shadowColor, lightColor) {
   if (x < -radius * 2 || x > canvas.width + radius * 2) return;
 
@@ -500,88 +635,78 @@ function drawDistantPlanet(x, y, radius, shadowColor, lightColor) {
   ctx.stroke();
 }
 
-function getVisiblePlanets() {
-  const offset = game.distance * planetScrollRate;
-  const firstIndex = Math.max(0, Math.floor((offset - planetSpacing) / planetSpacing));
-  const lastIndex = Math.ceil((offset + canvas.width + planetSpacing) / planetSpacing);
-  const planets = [];
+function getVisibleTerrain() {
+  const offset = game.distance * terrainScrollRate;
+  const firstIndex = Math.max(0, Math.floor((offset - nextTerrainStart) / terrainSpacing));
+  const lastIndex = Math.ceil((offset + canvas.width - nextTerrainStart) / terrainSpacing) + 1;
+  const segments = [];
 
   for (let index = firstIndex; index <= lastIndex; index += 1) {
-    const x = 20 + index * planetSpacing - offset;
-    const variation = index === 0 ? 0 : Math.sin(index * 2.17) * 17;
-    const top = groundY + variation - 8;
-    planets.push({ index, x, width: planetWidth, top, height: 80 });
+    const x = (index === 0
+      ? 20
+      : nextTerrainStart + (index - 1) * terrainSpacing) - offset;
+    const width = index === 0 ? startingTerrainWidth : terrainWidth;
+    const fakePatch = index >= 3 && index % 3 === 0
+      ? { x: x + 168, width: 86 }
+      : null;
+    segments.push({ index, x, width, top: groundY, fakePatch });
   }
 
-  return planets;
+  return segments;
 }
 
-function drawPlanetSurface() {
-  const palettes = [
-    ['#7545c2', '#bd88ff', '#41216f'],
-    ['#2768a9', '#75c6f0', '#163e76'],
-    ['#b84e97', '#f49bd6', '#6c245a'],
-    ['#b77339', '#ffd27a', '#704321']
-  ];
+function drawTerrainSurface() {
+  const terrainGradient = ctx.createLinearGradient(0, groundY, 0, canvas.height);
+  terrainGradient.addColorStop(0, '#62bd68');
+  terrainGradient.addColorStop(0.12, '#367a43');
+  terrainGradient.addColorStop(1, '#302345');
 
-  getVisiblePlanets().forEach((planet) => {
-    const [shadow, highlight, deep] = palettes[planet.index % palettes.length];
-    const centerX = planet.x + planet.width / 2;
-    const surface = ctx.createLinearGradient(0, planet.top, 0, planet.top + 140);
-    surface.addColorStop(0, highlight);
-    surface.addColorStop(0.2, shadow);
-    surface.addColorStop(1, deep);
+  getVisibleTerrain().forEach((segment) => {
+    const patches = segment.fakePatch
+      ? [
+          { x: segment.x, width: segment.fakePatch.x - segment.x },
+          {
+            x: segment.fakePatch.x + segment.fakePatch.width,
+            width: segment.x + segment.width - segment.fakePatch.x - segment.fakePatch.width
+          }
+        ]
+      : [{ x: segment.x, width: segment.width }];
 
-    ctx.save();
-    ctx.shadowColor = `${highlight}bb`;
-    ctx.shadowBlur = 20;
-    ctx.fillStyle = surface;
-    ctx.beginPath();
-    ctx.moveTo(planet.x + 12, planet.top + 18);
-    ctx.lineTo(planet.x + planet.width - 12, planet.top + 18);
-    ctx.quadraticCurveTo(
-      planet.x + planet.width,
-      planet.top + 18,
-      planet.x + planet.width,
-      planet.top + 48
-    );
-    ctx.lineTo(planet.x + planet.width, canvas.height + 40);
-    ctx.lineTo(planet.x, canvas.height + 40);
-    ctx.lineTo(planet.x, planet.top + 48);
-    ctx.quadraticCurveTo(
-      planet.x,
-      planet.top + 18,
-      planet.x + 12,
-      planet.top + 18
-    );
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
+    ctx.fillStyle = terrainGradient;
+    patches.forEach((patch) => {
+      if (patch.width <= 0) return;
+      ctx.fillRect(patch.x, segment.top, patch.width, canvas.height - segment.top);
+      ctx.fillStyle = '#8ddd79';
+      ctx.fillRect(patch.x, segment.top, patch.width, 7);
+      ctx.fillStyle = terrainGradient;
+    });
 
-    ctx.strokeStyle = '#f5d0fe';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(planet.x + 20, planet.top + 16);
-    ctx.lineTo(planet.x + planet.width - 20, planet.top + 16);
-    ctx.stroke();
-
-    ctx.fillStyle = `${deep}bb`;
-    ctx.beginPath();
-    ctx.ellipse(planet.x + 54, planet.top + 34, 18, 7, -0.18, 0, Math.PI * 2);
-    ctx.ellipse(planet.x + 140, planet.top + 46, 12, 5, 0.14, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = `${highlight}cc`;
-    ctx.beginPath();
-    ctx.arc(planet.x + 57, planet.top + 30, 2, 0, Math.PI * 2);
-    ctx.arc(planet.x + 132, planet.top + 42, 1.5, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.strokeStyle = `${highlight}99`;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.ellipse(centerX, planet.top + 52, planet.width * 0.62, 16, -0.08, 0.12, Math.PI - 0.12);
-    ctx.stroke();
+    if (segment.fakePatch) {
+      const { x, width } = segment.fakePatch;
+      ctx.fillStyle = '#564535';
+      ctx.fillRect(x, segment.top + 5, width, 12);
+      ctx.fillStyle = '#20242d';
+      ctx.fillRect(x, segment.top + 17, width, canvas.height - segment.top);
+      ctx.fillStyle = '#60965b';
+      ctx.fillRect(x, segment.top, width, 5);
+      ctx.strokeStyle = '#c4a56a';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x + 12, segment.top + 3);
+      ctx.lineTo(x + 30, segment.top + 13);
+      ctx.lineTo(x + 25, segment.top + 22);
+      ctx.moveTo(x + 48, segment.top + 2);
+      ctx.lineTo(x + 41, segment.top + 11);
+      ctx.lineTo(x + 61, segment.top + 18);
+      ctx.moveTo(x + 74, segment.top + 4);
+      ctx.lineTo(x + 66, segment.top + 12);
+      ctx.stroke();
+      ctx.fillStyle = '#facc15';
+      ctx.font = 'bold 13px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('!', x + width / 2, segment.top - 10);
+      ctx.textAlign = 'left';
+    }
   });
 }
 
@@ -617,6 +742,7 @@ function drawPlayer() {
       player.width,
       player.height
     );
+    if (game.state === 'portal') drawPlayerCrown(x, y);
     return;
   }
 
@@ -624,36 +750,85 @@ function drawPlayer() {
   ctx.fillRect(x, y, player.width, player.height);
   ctx.fillStyle = '#fbbf24';
   ctx.fillRect(x + 12, y + 8, 32, 18);
+  if (game.state === 'portal') drawPlayerCrown(x, y);
+}
+
+function drawPlayerCrown(x, y) {
+  ctx.save();
+  ctx.shadowColor = '#facc15';
+  ctx.shadowBlur = 14;
+  ctx.fillStyle = '#facc15';
+  ctx.strokeStyle = '#fff1a8';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(x + 14, y + 10);
+  ctx.lineTo(x + 12, y - 5);
+  ctx.lineTo(x + 22, y + 2);
+  ctx.lineTo(x + 29, y - 10);
+  ctx.lineTo(x + 36, y + 2);
+  ctx.lineTo(x + 45, y - 5);
+  ctx.lineTo(x + 42, y + 10);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
 }
 
 function drawObstacles() {
   game.obstacles.forEach((obstacle) => {
     const centerX = obstacle.x + obstacle.width / 2;
-    const centerY = obstacle.y + obstacle.height / 2;
-    ctx.fillStyle = '#b6a4cc';
+    const bodyY = obstacle.y + obstacle.height * 0.38;
+    ctx.fillStyle = '#79513e';
     ctx.beginPath();
-    ctx.moveTo(obstacle.x + obstacle.width * 0.18, obstacle.y + obstacle.height * 0.12);
-    ctx.lineTo(obstacle.x + obstacle.width * 0.8, obstacle.y);
-    ctx.lineTo(obstacle.x + obstacle.width, obstacle.y + obstacle.height * 0.55);
-    ctx.lineTo(obstacle.x + obstacle.width * 0.62, obstacle.y + obstacle.height);
-    ctx.lineTo(obstacle.x, obstacle.y + obstacle.height * 0.78);
-    ctx.closePath();
+    ctx.ellipse(centerX - 5, bodyY + 7, obstacle.width * 0.38, obstacle.height * 0.32, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = '#70518c';
+    ctx.fillStyle = '#a87958';
     ctx.beginPath();
-    ctx.arc(centerX + 2, centerY + 2, Math.min(obstacle.width, obstacle.height) * 0.17, 0, Math.PI * 2);
+    ctx.arc(centerX + obstacle.width * 0.27, bodyY + 1, obstacle.height * 0.28, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = '#f0d9ff';
+
+    ctx.fillStyle = '#a87958';
     ctx.beginPath();
-    ctx.arc(centerX - 5, centerY - 6, 3, 0, Math.PI * 2);
+    ctx.arc(centerX + obstacle.width * 0.13, bodyY - 8, 5, 0, Math.PI * 2);
+    ctx.arc(centerX + obstacle.width * 0.34, bodyY - 7, 5, 0, Math.PI * 2);
     ctx.fill();
+    ctx.fillStyle = '#e9a8a8';
+    ctx.beginPath();
+    ctx.arc(centerX + obstacle.width * 0.13, bodyY - 8, 2.5, 0, Math.PI * 2);
+    ctx.arc(centerX + obstacle.width * 0.34, bodyY - 7, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#fff4dc';
+    ctx.beginPath();
+    ctx.arc(centerX + obstacle.width * 0.37, bodyY, 2.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#241527';
+    ctx.beginPath();
+    ctx.arc(centerX + obstacle.width * 0.39, bodyY, 1, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = '#a87958';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(obstacle.x + 4, bodyY + 8);
+    ctx.quadraticCurveTo(obstacle.x - 8, bodyY + 5, obstacle.x - 2, bodyY - 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = '#3d2a25';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(centerX - 13, obstacle.y + obstacle.height - 2);
+    ctx.lineTo(centerX - 15, obstacle.y + obstacle.height + 2);
+    ctx.moveTo(centerX + 1, obstacle.y + obstacle.height - 2);
+    ctx.lineTo(centerX + 3, obstacle.y + obstacle.height + 2);
+    ctx.stroke();
   });
 }
 
 function drawCheckpointMarkers() {
   checkpointQuestions.forEach((checkpoint) => {
-    const x = game.player.x + (checkpoint.distance - game.distance) * planetScrollRate;
+    const x = game.player.x + (checkpoint.distance - game.distance) * terrainScrollRate;
     if (x < canvas.width - 20) {
       const reached = game.checkpointFlags.has(checkpoint.id);
       ctx.fillStyle = reached ? '#a78bfa' : '#f0abfc';
@@ -678,7 +853,8 @@ function drawHUDText() {
 
 function render() {
   drawBackground();
-  drawPlanetSurface();
+  if (game.state === 'portal') drawCastle();
+  drawTerrainSurface();
   drawCheckpointMarkers();
   drawObstacles();
   drawPlayer();
@@ -696,7 +872,7 @@ function gameLoop(timestamp) {
 }
 
 startButton.addEventListener('click', startGame);
-restartButton.addEventListener('click', startGame);
+restartButton.addEventListener('click', resumeFromCheckpoint);
 playAgainButton.addEventListener('click', startGame);
 window.addEventListener('keydown', handleKeyDown);
 window.addEventListener('pointerdown', handlePointer);

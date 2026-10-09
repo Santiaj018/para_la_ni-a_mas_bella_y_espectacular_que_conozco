@@ -275,7 +275,7 @@ input {
   overflow-y: auto;
   background:
     radial-gradient(ellipse at center, rgba(101, 45, 170, 0.26), transparent 58%),
-    rgba(3, 2, 12, 0.94);
+    rgba(3, 2, 12, 0.68);
 }
 
 .portal-card {
