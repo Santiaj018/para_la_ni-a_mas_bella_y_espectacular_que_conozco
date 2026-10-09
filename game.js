@@ -107,7 +107,7 @@ const groundY = canvas.height - 50;
 
 function loadDefaultPlayerImage() {
   const img = new Image();
-  img.src = 'assets/runner.svg';
+  img.src = 'assets/lorem.jpg';
   img.onload = () => {
     game.player.image = img;
   };
@@ -461,7 +461,32 @@ function drawPlayer() {
   const y = player.y;
 
   if (player.image) {
-    ctx.drawImage(player.image, x, y, player.width, player.height);
+    const imageAspect = player.image.width / player.image.height;
+    const playerAspect = player.width / player.height;
+    let sourceX = 0;
+    let sourceY = 0;
+    let sourceWidth = player.image.width;
+    let sourceHeight = player.image.height;
+
+    if (imageAspect < playerAspect) {
+      sourceHeight = player.image.width / playerAspect;
+      sourceY = (player.image.height - sourceHeight) / 2;
+    } else {
+      sourceWidth = player.image.height * playerAspect;
+      sourceX = (player.image.width - sourceWidth) / 2;
+    }
+
+    ctx.drawImage(
+      player.image,
+      sourceX,
+      sourceY,
+      sourceWidth,
+      sourceHeight,
+      x,
+      y,
+      player.width,
+      player.height
+    );
     return;
   }
 

@@ -1,13 +1,33 @@
 <svg width="480" height="280" viewBox="0 0 480 280" xmlns="http://www.w3.org/2000/svg">
-  <rect width="480" height="280" fill="#fff7ed"/>
-  <rect x="52" y="36" width="376" height="208" rx="26" fill="#fff" stroke="#f97316" stroke-width="4"/>
-  <g transform="translate(110,70)">
-    <circle cx="62" cy="50" r="30" fill="#fbbf24"/>
-    <path d="M50 50 L62 26 L74 50" fill="#fef3c7"/>
-    <path d="M36 58 L88 58 L106 116 L18 116 Z" fill="#fdba74"/>
+  <defs>
+    <linearGradient id="night300" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#10051f"/>
+      <stop offset="100%" stop-color="#03030b"/>
+    </linearGradient>
+    <linearGradient id="purple300" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e9d5ff"/>
+      <stop offset="100%" stop-color="#9333ea"/>
+    </linearGradient>
+  </defs>
+  <rect width="480" height="280" rx="26" fill="url(#night300)"/>
+  <rect x="8" y="8" width="464" height="264" rx="20" fill="none" stroke="#8b5cf6" stroke-opacity=".72" stroke-width="2"/>
+  <g fill="#f3d6ff">
+    <circle cx="42" cy="54" r="2"/><circle cx="93" cy="35" r="1.5"/><circle cx="145" cy="61" r="2"/>
+    <circle cx="335" cy="48" r="1.5"/><circle cx="413" cy="64" r="2"/><circle cx="450" cy="37" r="1.5"/>
+    <circle cx="63" cy="222" r="1.5"/><circle cx="113" cy="250" r="2"/><circle cx="386" cy="230" r="1.5"/>
+    <circle cx="437" cy="205" r="2"/><circle cx="30" cy="151" r="1.5"/><circle cx="457" cy="139" r="1.5"/>
   </g>
-  <text x="240" y="116" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#9a4d00">postre favorito</text>
-  <text x="240" y="156" text-anchor="middle" font-family="Arial, sans-serif" font-size="17" fill="#c2410c">Cupón válido para ir a comer</text>
-  <text x="240" y="182" text-anchor="middle" font-family="Arial, sans-serif" font-size="17" fill="#c2410c">tu postre favorito en donde tú digas</text>
-  <text x="240" y="214" text-anchor="middle" font-family="Arial, sans-serif" font-size="17" font-weight="700" fill="#7c2d12">con cariño y azúcar</text>
+  <g fill="none" stroke="#c084fc" stroke-linecap="round" stroke-width="2">
+    <path d="M68 87v10m-5-5h10M407 108v10m-5-5h10M350 235v8m-4-4h8"/>
+    <path d="m131 186 3 7 7 3-7 3-3 7-3-7-7-3 7-3zM390 165l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/>
+  </g>
+  <circle cx="240" cy="43" r="23" fill="#a855f7" fill-opacity=".16"/>
+  <path d="M225 34h30v31c0 7-6 12-15 15-9-3-15-8-15-15z" fill="url(#purple300)" stroke="#f3d6ff" stroke-width="2"/>
+  <path d="M223 34h34v8h-34z" fill="#e9d5ff" stroke="#f3d6ff" stroke-width="2"/>
+  <path d="M240 42v35m-10-20h20" stroke="#7e22ce" stroke-width="3"/>
+  <path d="M234 48c-7-8-14 1 0 9 14-8 7-17 0-9z" fill="#fff"/>
+  <text x="240" y="106" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#e9b7ff">Compota del amor</text>
+  <text x="240" y="145" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#d8b4fe">Este cupón es válido para redimir</text>
+  <text x="240" y="170" text-anchor="middle" font-family="Arial, sans-serif" font-size="17" fill="#d8b4fe">cuando lo necesites</text>
+  <text x="240" y="215" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#c084fc">Toma una captura para que sea válido</text>
 </svg>

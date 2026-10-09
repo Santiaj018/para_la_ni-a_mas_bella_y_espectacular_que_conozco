@@ -1,16 +1,31 @@
 <svg width="480" height="280" viewBox="0 0 480 280" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="bg400" x1="0" x2="1">
-      <stop offset="0%" stop-color="#eef2ff"/>
-      <stop offset="100%" stop-color="#ddd6fe"/>
+    <linearGradient id="night400" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#10051f"/>
+      <stop offset="100%" stop-color="#03030b"/>
+    </linearGradient>
+    <linearGradient id="purple400" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f0abfc"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
     </linearGradient>
   </defs>
-  <rect width="480" height="280" fill="url(#bg400)"/>
-  <rect x="44" y="40" width="392" height="200" rx="26" fill="#ffffff" stroke="#7c3aed" stroke-width="4"/>
-  <path d="M160 100 C152 66 176 52 196 82 C214 52 238 66 230 100" fill="#fbcfe8"/>
-  <path d="M188 92 C184 80 168 72 159 82 C150 92 154 108 168 112 C180 116 190 108 188 92" fill="#f472b6"/>
-  <path d="M274 92 C270 80 254 72 245 82 C236 92 240 108 254 112 C266 116 276 108 274 92" fill="#f472b6"/>
-  <text x="240" y="128" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#4c1d95">te amo infinitamente</text>
-  <text x="240" y="164" text-anchor="middle" font-family="Arial, sans-serif" font-size="17" fill="#6d28d9">Cupón válido para una tarde eterna a tu lado</text>
-  <text x="240" y="194" text-anchor="middle" font-family="Arial, sans-serif" font-size="17" fill="#6d28d9">toma captura para que sea válido</text>
+  <rect width="480" height="280" rx="26" fill="url(#night400)"/>
+  <rect x="8" y="8" width="464" height="264" rx="20" fill="none" stroke="#8b5cf6" stroke-opacity=".72" stroke-width="2"/>
+  <g fill="#f3d6ff">
+    <circle cx="42" cy="54" r="2"/><circle cx="93" cy="35" r="1.5"/><circle cx="145" cy="61" r="2"/>
+    <circle cx="335" cy="48" r="1.5"/><circle cx="413" cy="64" r="2"/><circle cx="450" cy="37" r="1.5"/>
+    <circle cx="63" cy="222" r="1.5"/><circle cx="113" cy="250" r="2"/><circle cx="386" cy="230" r="1.5"/>
+    <circle cx="437" cy="205" r="2"/><circle cx="30" cy="151" r="1.5"/><circle cx="457" cy="139" r="1.5"/>
+  </g>
+  <g fill="none" stroke="#c084fc" stroke-linecap="round" stroke-width="2">
+    <path d="M68 87v10m-5-5h10M407 108v10m-5-5h10M350 235v8m-4-4h8"/>
+    <path d="m131 186 3 7 7 3-7 3-3 7-3-7-7-3 7-3zM390 165l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/>
+  </g>
+  <circle cx="240" cy="43" r="23" fill="#a855f7" fill-opacity=".16"/>
+  <path d="M214 45c0-17 20-22 30-6 10-16 30-11 30 6 0 15-30 32-30 32s-30-17-30-32z" fill="url(#purple400)" stroke="#f3d6ff" stroke-width="2"/>
+  <path d="M221 51c8-13 14 13 23 0s15 13 23 0" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="3"/>
+  <text x="240" y="106" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#e9b7ff">Te amo infinitamente</text>
+  <text x="240" y="145" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#d8b4fe">Cupón válido para una tarde eterna</text>
+  <text x="240" y="170" text-anchor="middle" font-family="Arial, sans-serif" font-size="17" fill="#d8b4fe">a tu lado</text>
+  <text x="240" y="215" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#c084fc">Toma una captura para que sea válido</text>
 </svg>

@@ -240,8 +240,8 @@ input {
   object-fit: contain;
   margin: 10px auto 16px;
   border-radius: 18px;
-  background: #f8fafc;
-  box-shadow: 0 16px 30px rgba(2, 6, 23, 0.35);
+  background: #05030b;
+  box-shadow: 0 16px 30px rgba(2, 6, 23, 0.55), 0 0 24px rgba(168, 85, 247, 0.2);
 }
 
 .reward-message {
