@@ -26,7 +26,8 @@
           <div class="panel-card">
             <img class="welcome-character" src="assets/lorem.jpg" alt="Lorem, personaje principal" />
             <h1>¡Bienvenida, Lorem!</h1>
-            <p>Corre hasta la meta, salta los obstáculos y gana cupones románticos preparados para ti.</p>
+            <p>Viaja por la galaxia, salta entre planetas y descubre sorpresas en cada parada.</p>
+            <p class="controls-hint">Toca la pantalla o pulsa espacio para saltar.</p>
             <button id="startButton" class="primary-button" type="button">Comenzar</button>
           </div>
         </div>
@@ -60,12 +61,21 @@
           </div>
         </div>
 
-        <div id="victoryOverlay" class="modal hidden" aria-live="polite">
-          <div class="panel-card result-card">
-            <h2>¡Victoria!</h2>
-            <p>Has completado la ruta de 400 metros y ganado todo el amor del mundo.</p>
-            <p>Recuerda mi lorencita que yo te amo demasiado monton. mocosa</p>
-            <button id="playAgainButton" class="primary-button" type="button">Volver a jugar</button>
+        <div id="portalOverlay" class="modal portal-overlay hidden" aria-live="polite">
+          <div id="portalCard" class="portal-card">
+            <div class="portal-visual" aria-hidden="true">
+              <div class="portal-ring"></div>
+              <span class="portal-core"></span>
+            </div>
+            <p class="portal-caption">Has llegado al final de la galaxia</p>
+            <h2 class="portal-message">TE AMO LORENA</h2>
+            <div class="final-coupon">
+              <span class="coupon-label">Un mensaje del universo para ti</span>
+              <h3>DÉJATE LLEVAR</h3>
+              <p>PRONTO SABRÁS MÁS</p>
+              <span class="coupon-stars" aria-hidden="true">✦　✧　✦</span>
+            </div>
+            <button id="playAgainButton" class="primary-button hidden" type="button">Viajar otra vez</button>
           </div>
         </div>
       </main>

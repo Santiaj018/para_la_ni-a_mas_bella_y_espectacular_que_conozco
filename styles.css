@@ -1,11 +1,11 @@
 :root {
-  --bg-top: #1e293b;
-  --bg-bottom: #020817;
-  --panel: rgba(15, 23, 42, 0.8);
-  --panel-border: rgba(148, 163, 184, 0.38);
-  --primary: #26c281;
-  --primary-strong: #17a56d;
-  --secondary: #fbbf24;
+  --bg-top: #120a2a;
+  --bg-bottom: #03030b;
+  --panel: rgba(15, 10, 35, 0.84);
+  --panel-border: rgba(192, 132, 252, 0.42);
+  --primary: #c084fc;
+  --primary-strong: #8b5cf6;
+  --secondary: #e9b7ff;
   --danger: #ef4444;
   --text: #e2e8f0;
   --muted: #cbd5e1;
@@ -21,7 +21,10 @@ body {
   margin: 0;
   min-height: 100%;
   font-family: Arial, Helvetica, sans-serif;
-  background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
+  background:
+    radial-gradient(ellipse at 18% 22%, rgba(106, 48, 170, 0.32), transparent 38%),
+    radial-gradient(ellipse at 82% 36%, rgba(47, 65, 152, 0.25), transparent 34%),
+    linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
   color: var(--text);
 }
 
@@ -47,7 +50,7 @@ input {
   justify-content: space-between;
   align-items: center;
   padding: 14px 18px;
-  background: rgba(15, 23, 42, 0.7);
+  background: rgba(12, 8, 30, 0.82);
   border: 1px solid var(--panel-border);
   border-radius: 18px;
   box-shadow: 0 14px 32px rgba(2, 6, 23, 0.4);
@@ -78,7 +81,7 @@ input {
   overflow: hidden;
   border: 1px solid var(--panel-border);
   box-shadow: 0 18px 50px rgba(2, 6, 23, 0.5);
-  background: linear-gradient(180deg, #7dd3fc 0%, #dbeafe 42%, #fef9c3 100%);
+  background: #090717;
 }
 
 #gameCanvas {
@@ -86,7 +89,7 @@ input {
   width: 100%;
   height: auto;
   aspect-ratio: 16 / 7;
-  background: linear-gradient(180deg, #93c5fd 0%, #e0f2fe 48%, #d9f99d 100%);
+  background: #090717;
 }
 
 .screen,
@@ -95,7 +98,7 @@ input {
   inset: 0;
   display: grid;
   place-items: center;
-  background: rgba(2, 6, 23, 0.42);
+  background: rgba(3, 3, 12, 0.56);
   backdrop-filter: blur(3px);
 }
 
@@ -107,7 +110,7 @@ input {
   width: min(88%, 560px);
   padding: 24px 22px;
   border-radius: 22px;
-  background: rgba(15, 23, 42, 0.9);
+  background: rgba(12, 8, 30, 0.92);
   border: 1px solid var(--panel-border);
   box-shadow: 0 18px 40px var(--shadow);
   text-align: center;
@@ -148,7 +151,7 @@ input {
 
 .primary-button {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
-  color: #042b1b;
+  color: #1b1030;
   min-width: 180px;
 }
 
@@ -171,6 +174,11 @@ input {
   inset: 0;
   background: rgba(15, 23, 42, 0.38);
   border-radius: inherit;
+}
+
+.controls-hint {
+  font-size: 0.88rem;
+  color: #d8b4fe !important;
 }
 
 .question-card > * {
@@ -256,6 +264,168 @@ input {
   width: min(82%, 420px);
 }
 
+.portal-overlay {
+  overflow-y: auto;
+  background:
+    radial-gradient(ellipse at center, rgba(101, 45, 170, 0.26), transparent 58%),
+    rgba(3, 2, 12, 0.94);
+}
+
+.portal-card {
+  width: min(90%, 560px);
+  min-height: 360px;
+  padding: 22px 24px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.portal-visual {
+  position: relative;
+  width: 136px;
+  height: 136px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 8px;
+  filter: drop-shadow(0 0 20px rgba(192, 132, 252, 0.72));
+  animation: portal-float 2.5s ease-in-out infinite;
+}
+
+.portal-ring,
+.portal-core {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.portal-ring {
+  inset: 6px;
+  border: 5px solid #d8b4fe;
+  box-shadow:
+    0 0 12px #c084fc,
+    inset 0 0 14px #a855f7,
+    0 0 32px rgba(168, 85, 247, 0.9);
+  animation: portal-spin 5s linear infinite;
+}
+
+.portal-ring::before,
+.portal-ring::after {
+  content: "";
+  position: absolute;
+  inset: 8px -7px;
+  border: 2px solid rgba(240, 171, 252, 0.8);
+  border-radius: 50%;
+  transform: rotate(55deg);
+}
+
+.portal-ring::after {
+  transform: rotate(-55deg);
+  border-color: rgba(129, 140, 248, 0.85);
+}
+
+.portal-core {
+  inset: 25px;
+  background: radial-gradient(circle, #f5d0fe 0%, #c084fc 26%, #7c3aed 58%, #160b38 100%);
+  box-shadow: 0 0 30px rgba(216, 180, 254, 0.9);
+  animation: portal-pulse 1.8s ease-in-out infinite alternate;
+}
+
+.portal-caption,
+.portal-message,
+.final-coupon {
+  opacity: 0;
+  transform: translateY(14px) scale(0.96);
+  transition: opacity 0.9s ease, transform 0.9s ease;
+}
+
+.portal-caption {
+  margin: 0 0 8px;
+  color: #d8b4fe;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+
+.portal-message {
+  margin: 4px 0 22px;
+  color: #f0abfc;
+  font-size: clamp(2rem, 7vw, 3.4rem);
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 12px #c084fc, 0 0 34px rgba(168, 85, 247, 0.8);
+}
+
+.message-visible .portal-caption,
+.message-visible .portal-message,
+.coupon-visible .final-coupon {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.coupon-visible .portal-visual {
+  transform: scale(0.62);
+  margin-top: -20px;
+  margin-bottom: -10px;
+  transition: transform 0.9s ease, margin 0.9s ease;
+}
+
+.final-coupon {
+  width: min(100%, 390px);
+  margin: 2px auto 20px;
+  padding: 23px 18px;
+  border: 1px solid rgba(216, 180, 254, 0.78);
+  border-radius: 18px;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(147, 51, 234, 0.25), transparent 72%),
+    linear-gradient(145deg, rgba(17, 8, 39, 0.96), rgba(5, 4, 16, 0.98));
+  box-shadow: 0 0 30px rgba(147, 51, 234, 0.28), inset 0 0 24px rgba(139, 92, 246, 0.12);
+  transition-delay: 0.25s;
+}
+
+.coupon-label,
+.coupon-stars {
+  color: #d8b4fe;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+}
+
+.final-coupon h3 {
+  margin: 12px 0 6px;
+  color: #f0abfc;
+  font-size: clamp(1.5rem, 6vw, 2.2rem);
+  letter-spacing: 0.12em;
+  text-shadow: 0 0 16px rgba(192, 132, 252, 0.72);
+}
+
+.final-coupon p {
+  margin: 0 0 14px;
+  color: #e9d5ff;
+  letter-spacing: 0.18em;
+  font-weight: 700;
+}
+
+.coupon-stars {
+  color: #f0abfc;
+}
+
+.portal-card .primary-button {
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+@keyframes portal-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes portal-pulse {
+  from { transform: scale(0.88); opacity: 0.78; }
+  to { transform: scale(1.08); opacity: 1; }
+}
+
+@keyframes portal-float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -10px; }
+}
+
 @media (max-width: 760px) {
   .hud {
     padding-inline: 14px;
@@ -266,9 +436,13 @@ input {
   }
 
   .primary-button,
-  .answer-button,
-  .upload-button {
+  .answer-button {
     width: 100%;
+  }
+
+  .portal-card {
+    min-height: 320px;
+    padding: 18px 14px 24px;
   }
 
   .question-header {
