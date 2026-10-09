@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Runner Quiz</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="hud">
+        <div class="hud-item">
+          <span class="hud-label">Distancia</span>
+          <strong id="distanceValue">0 m</strong>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">Meta</span>
+          <strong>400 m</strong>
+        </div>
+      </header>
+
+      <main class="game-panel">
+        <canvas id="gameCanvas" width="960" height="420" aria-label="Juego de carrera"></canvas>
+
+        <div id="startOverlay" class="screen active">
+          <div class="panel-card">
+            <h1>Amor en carrera</h1>
+            <p>Corre hasta la meta, salta los obstáculos y gana cupones románticos para Santiago.</p>
+            <label class="upload-button" for="playerImageInput">
+              Cargar personaje
+            </label>
+            <input id="playerImageInput" type="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp" />
+            <button id="startButton" class="primary-button" type="button">Comenzar</button>
+          </div>
+        </div>
+
+        <div id="questionPanel" class="modal hidden" aria-live="polite">
+          <div class="panel-card question-card">
+            <div class="question-header">
+              <span id="checkpointBadge">Punto de control</span>
+              <span id="attemptCounter">Intento 1/2</span>
+            </div>
+            <h2 id="questionText">Pregunta</h2>
+            <div id="answerList" class="answers"></div>
+            <p id="questionFeedback" class="feedback"></p>
+          </div>
+        </div>
+
+        <div id="rewardOverlay" class="modal hidden" aria-live="polite">
+          <div class="panel-card reward-card">
+            <h2 id="rewardTitle">¡Correcto!</h2>
+            <img id="rewardImage" src="assets/reward-100.svg" alt="Premio" />
+            <p id="rewardMessage" class="reward-message">Toma una captura para que sea válido.</p>
+            <p class="continue-text">Toca para continuar</p>
+          </div>
+        </div>
+
+        <div id="gameOverOverlay" class="modal hidden" aria-live="polite">
+          <div class="panel-card result-card">
+            <h2>¡Has perdido!</h2>
+            <p id="gameOverDistance">Distancia: 0 m</p>
+            <button id="restartButton" class="primary-button" type="button">Jugar otra vez</button>
+          </div>
+        </div>
+
+        <div id="victoryOverlay" class="modal hidden" aria-live="polite">
+          <div class="panel-card result-card">
+            <h2>¡Victoria!</h2>
+            <p>Has completado la ruta de 400 metros y ganado todo el amor del mundo.</p>
+            <button id="playAgainButton" class="primary-button" type="button">Volver a jugar</button>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script src="game.js"></script>
+  </body>
+</html>
