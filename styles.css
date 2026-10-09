@@ -264,6 +264,13 @@ input {
   width: min(82%, 420px);
 }
 
+.game-over-message {
+  color: #f0abfc !important;
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-shadow: 0 0 14px rgba(192, 132, 252, 0.65);
+}
+
 .portal-overlay {
   overflow-y: auto;
   background:
