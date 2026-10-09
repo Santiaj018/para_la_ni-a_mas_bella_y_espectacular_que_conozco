@@ -509,7 +509,8 @@ function getVisiblePlanets() {
   for (let index = firstIndex; index <= lastIndex; index += 1) {
     const x = 20 + index * planetSpacing - offset;
     const variation = index === 0 ? 0 : Math.sin(index * 2.17) * 17;
-    planets.push({ index, x, top: groundY + variation });
+    const top = groundY + variation - 8;
+    planets.push({ index, x, width: planetWidth, top, height: 80 });
   }
 
   return planets;
@@ -525,23 +526,34 @@ function drawPlanetSurface() {
 
   getVisiblePlanets().forEach((planet) => {
     const [shadow, highlight, deep] = palettes[planet.index % palettes.length];
-    const centerX = planet.x + planetWidth / 2;
-    const surface = ctx.createLinearGradient(0, planet.top, 0, canvas.height + 60);
+    const centerX = planet.x + planet.width / 2;
+    const surface = ctx.createLinearGradient(0, planet.top, 0, planet.top + 140);
     surface.addColorStop(0, highlight);
-    surface.addColorStop(0.18, shadow);
+    surface.addColorStop(0.2, shadow);
     surface.addColorStop(1, deep);
 
     ctx.save();
     ctx.shadowColor = `${highlight}bb`;
-    ctx.shadowBlur = 17;
+    ctx.shadowBlur = 20;
     ctx.fillStyle = surface;
     ctx.beginPath();
-    ctx.moveTo(planet.x, planet.top + 17);
-    ctx.quadraticCurveTo(planet.x + 2, planet.top, planet.x + 23, planet.top);
-    ctx.lineTo(planet.x + planetWidth - 23, planet.top);
-    ctx.quadraticCurveTo(planet.x + planetWidth - 2, planet.top, planet.x + planetWidth, planet.top + 17);
-    ctx.lineTo(planet.x + planetWidth, canvas.height + 50);
-    ctx.lineTo(planet.x, canvas.height + 50);
+    ctx.moveTo(planet.x + 12, planet.top + 18);
+    ctx.lineTo(planet.x + planet.width - 12, planet.top + 18);
+    ctx.quadraticCurveTo(
+      planet.x + planet.width,
+      planet.top + 18,
+      planet.x + planet.width,
+      planet.top + 48
+    );
+    ctx.lineTo(planet.x + planet.width, canvas.height + 40);
+    ctx.lineTo(planet.x, canvas.height + 40);
+    ctx.lineTo(planet.x, planet.top + 48);
+    ctx.quadraticCurveTo(
+      planet.x,
+      planet.top + 18,
+      planet.x + 12,
+      planet.top + 18
+    );
     ctx.closePath();
     ctx.fill();
     ctx.restore();
@@ -549,26 +561,26 @@ function drawPlanetSurface() {
     ctx.strokeStyle = '#f5d0fe';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(planet.x + 12, planet.top + 2);
-    ctx.lineTo(planet.x + planetWidth - 12, planet.top + 2);
+    ctx.moveTo(planet.x + 20, planet.top + 16);
+    ctx.lineTo(planet.x + planet.width - 20, planet.top + 16);
     ctx.stroke();
 
     ctx.fillStyle = `${deep}bb`;
     ctx.beginPath();
-    ctx.ellipse(planet.x + 55, planet.top + 41, 19, 7, -0.18, 0, Math.PI * 2);
-    ctx.ellipse(planet.x + 145, planet.top + 58, 12, 5, 0.14, 0, Math.PI * 2);
+    ctx.ellipse(planet.x + 54, planet.top + 34, 18, 7, -0.18, 0, Math.PI * 2);
+    ctx.ellipse(planet.x + 140, planet.top + 46, 12, 5, 0.14, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.fillStyle = `${highlight}cc`;
     ctx.beginPath();
-    ctx.arc(planet.x + 48, planet.top + 39, 2, 0, Math.PI * 2);
-    ctx.arc(planet.x + 138, planet.top + 56, 1.5, 0, Math.PI * 2);
+    ctx.arc(planet.x + 57, planet.top + 30, 2, 0, Math.PI * 2);
+    ctx.arc(planet.x + 132, planet.top + 42, 1.5, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.strokeStyle = `${highlight}99`;
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.ellipse(centerX, planet.top + 72, planetWidth * 0.64, 17, -0.08, 0.12, Math.PI - 0.12);
+    ctx.ellipse(centerX, planet.top + 52, planet.width * 0.62, 16, -0.08, 0.12, Math.PI - 0.12);
     ctx.stroke();
   });
 }
