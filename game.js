@@ -18,7 +18,6 @@ const rewardImage = document.getElementById('rewardImage');
 const gameOverOverlay = document.getElementById('gameOverOverlay');
 const gameOverDistance = document.getElementById('gameOverDistance');
 const victoryOverlay = document.getElementById('victoryOverlay');
-const playerImageInput = document.getElementById('playerImageInput');
 const restartButton = document.getElementById('restartButton');
 const playAgainButton = document.getElementById('playAgainButton');
 
@@ -111,30 +110,6 @@ function loadDefaultPlayerImage() {
   img.onload = () => {
     game.player.image = img;
   };
-}
-
-function handlePlayerImageUpload(event) {
-  const file = event.target.files && event.target.files[0];
-  if (!file) return;
-
-  const validTypes = ['image/png', 'image/jpeg', 'image/webp'];
-  if (!validTypes.includes(file.type)) {
-    alert('Selecciona un archivo PNG, JPG o WebP.');
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = (loadEvent) => {
-    const img = new Image();
-    img.onload = () => {
-      game.player.image = img;
-      game.player.width = 64;
-      game.player.height = 70;
-      game.player.y = groundY - game.player.height;
-    };
-    img.src = loadEvent.target.result;
-  };
-  reader.readAsDataURL(file);
 }
 
 function resetPlayer() {
@@ -550,7 +525,6 @@ restartButton.addEventListener('click', startGame);
 playAgainButton.addEventListener('click', startGame);
 window.addEventListener('keydown', handleKeyDown);
 window.addEventListener('pointerdown', handlePointer);
-playerImageInput.addEventListener('change', handlePlayerImageUpload);
 
 loadDefaultPlayerImage();
 resetGame();
